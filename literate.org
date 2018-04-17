@@ -1,0 +1,167 @@
+* About
+  This application creates text2speech files from the clipboard and makes a fifo queue of the files
+  and plays them in order.
+
+
+* Implementation
+  The code has four flags:
+  + Add to queue
+  + Play top
+  + Play all
+  + Merge all into single file
+  [[./layout.png]]
+  
+** Add to queue
+   Create a text2speech file and add it to the queue
+
+** Play top
+   Start playing the top file and remove it from the queue.
+
+** Play all
+   As long as there is a file on the queue play it.
+
+** Merge all
+   Take all the files on the queue and merge them into a single wav file.
+
+* Code
+
+** House keeping
+   Setup shebang, pwd and flags.
+   The shebang used is the file location of the venv python.
+   The flags are from argparse.
+   #+name:header
+   #+begin_src python :tangle lit.py :comments noweb :shebang #!/home/anton/venv/bin/python 
+     import sys
+     import os
+     from hashlib import shake_256
+     import argparse
+
+     os.chdir("/home/anton/sound_files")
+     parser = argparse.ArgumentParser()
+     parser.add_argument("-a", "--add", help="add a file",
+                         action="store_true")
+     parser.add_argument("-p", "--play", help="play a file",
+                         action="store_true")
+     parser.add_argument("-l", "--loop", help="loop all files",
+                         action="store_true")
+     parser.add_argument("-j", "--join", help="join all files",
+                         action="store_true")
+
+     args = parser.parse_args()
+   #+end_src
+
+** Enqeueue files
+   #+name:enqueue
+   #+begin_src python :tangle lit.py :comments noweb 
+     def add_to_stack():
+         '''Adds name to the stack file at the bottom.'''
+         m = shake_256()
+         name = (os.popen("xsel").read())
+         m.update(str.encode(name))
+         name = m.hexdigest(16)
+         check = os.path.isfile("{}.wav".format(name))
+         if not check:
+             with open('stack', 'a') as f:
+                 f.write('{}\n'.format(str(name)))
+             os.system("xsel | tr '\n' ' ' | espeak -p 100 -s 650 -v male7 -w {}.wav --stdin".format(name))
+
+   #+end_src
+
+** Dequeue files
+   Add an optional recursive call.   
+
+   #+name:dequeue
+   #+begin_src python :tangle lit.py :comments noweb 
+     def pop_from_stack(delete=True, cont=False):
+         '''Pops a file from the bottom of the stack'''
+         with open('stack', 'r') as f:
+             lines = [x.strip() for x in f]
+             try:
+                 lines.remove('')
+             except:
+                 pass
+             print(lines)
+             if not lines:
+                 print('No files quequed up')
+                 return 
+         with open('stack', 'w') as f:
+             f.write("\n".join(lines[1:]) + '\n')
+         name = lines[0]
+         check = os.path.isfile("{}.wav".format(name))
+         if check:
+             os.system('mplayer {}.wav'.format(name))
+             if delete:
+                 os.system('rm {}.wav'.format(name))
+             if cont:
+                 pop_from_stack(cont=True)
+         else:
+             print("File not found.")
+   #+end_src
+
+** Concat files files
+   Add an optional recursive call.   
+   #+name:concat
+   #+begin_src python :tangle lit.py :comments noweb 
+     def concat_files():
+         '''Concat all the files in the queue'''
+         #Not tested.
+         with open('stack', 'r') as f:
+             lines = [x.strip() for x in f]
+             if not lines:
+                 print('No files quequed up')
+                 return 
+         with open('stack', 'w') as f:
+             f.write("")
+             #Assume nothing left
+         name = lines[0]
+         new_files = []
+         for i in lines:
+             check = os.path.isfile("{}.wav".format(name))
+             if check:
+                 new_files.append(name)
+         joined_command = ['{}.wav'.format(x) for x in new_files]
+         joined_command = ' '.join(joined_command)
+         os.system('sox {} big.wav'.format(joined_command))
+         os.system('mplayer big.wav')
+
+   #+end_src
+
+** Main dispatcher
+   #+name:dispatcher
+   #+begin_src python :tangle lit.py :comments noweb 
+     if __name__ == "__main__":
+         if args.add:
+             add_to_stack()
+         if args.play:
+             pop_from_stack()
+         if args.loop:
+             pop_from_stack(cont=True)
+         if args.join:
+             concat_files()
+   #+end_src
+
+
+* TODO Plant
+  
+** Spin off own threads for song creation. 
+
+** Make file to extract the code from org file.
+   
+** Create a deamon that plays any enqueued songs.
+  
+** Add testing
+   Create another file testing.py that runs tests on the files.
+
+** Redo code with better data structures.
+   
+
+** TODO Extensoin
+   Expand this to have an endless loop that constantly plays back files if any are present.
+
+* COMMENT Code
+  All files named as hashes to avoid collisions.
+  Command line options 
+  + [ ] Add commandline options that are mutually exclisive.
+  + [ ] Add threads to run the espeak commands on their own proccess.
+  + [ ] Use path library.
+** 
