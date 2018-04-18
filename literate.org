@@ -1,167 +1,216 @@
 * About
-  This application creates text2speech files from the clipboard and makes a fifo queue of the files
-  and plays them in order.
+  This application creates text to speech files from the system clipboard, makes a fifo queue of the sound files
+  and plays them in the order they were enqueued.
 
 
-* Implementation
-  The code has four flags:
-  + Add to queue
-  + Play top
-  + Play all
-  + Merge all into single file
+* Implementation 
+  The program has a hard coded path =sound_files= in =/home/user/= where all text to speech files are stored,
+  and where the queue is persisted between calls.
+  All files are named using the sha3 hash of the text that will be turned to speech.
+
   [[./layout.png]]
   
-** Add to queue
-   Create a text2speech file and add it to the queue
-
-** Play top
-   Start playing the top file and remove it from the queue.
-
-** Play all
-   As long as there is a file on the queue play it.
-
-** Merge all
-   Take all the files on the queue and merge them into a single wav file.
+  The program has four command line flags:
+  + -a: Add to queue
+    
+    Create a text2speech file and add it to the queue
+  + -p: Play 
+    
+    Start playing the top file of the queue and continue playing all subsequent files, files are deleted when played fully.
+  + -j: Merge all into single file
+    
+    Take all the files on the queue and merge them into a single wav file.
+  
 
 * Code
+#+PROPERTY: header-args:python :tangle lit.py :comments noweb
+# Add an option to export everything in this section to lit.py.
+# Change source code so name of code block does not showup automatically
+The queue file has item added on the right, and items removed from the left.
 
 ** House keeping
-   Setup shebang, pwd and flags.
+   Setup shebang, script working directory, flags and queue persistence functions.
    The shebang used is the file location of the venv python.
-   The flags are from argparse.
+   The flags are implemented from argparse.
+   
+   *Name*:Header *Tangle to*:lit.py
    #+name:header
-   #+begin_src python :tangle lit.py :comments noweb :shebang #!/home/anton/venv/bin/python 
-     import sys
+   #+begin_src python :shebang #!/home/anton/venv/bin/python 
      import os
      from hashlib import shake_256
      import argparse
+     from collections import deque
+     import pickle
+     from pathlib import Path
 
-     os.chdir("/home/anton/sound_files")
+     home = str(Path.home())
+     os.chdir("{}/sound_files".format(home))
+
      parser = argparse.ArgumentParser()
      parser.add_argument("-a", "--add", help="add a file",
                          action="store_true")
      parser.add_argument("-p", "--play", help="play a file",
                          action="store_true")
-     parser.add_argument("-l", "--loop", help="loop all files",
-                         action="store_true")
      parser.add_argument("-j", "--join", help="join all files",
                          action="store_true")
 
      args = parser.parse_args()
+
+   #+end_src
+** Queue persistence 
+   + [X] Add/mode descriptions from house kepeing.
+     
+   Queue from collections is picked and unpicked from the given file.
+   The queue function is used from the collections library,
+   pickle is used to store a binary representation of the queue in the =stack= file.
+   If pickle can't read the file, we assume there is no current stack and create a new one.
+   
+   #+name:queue-helpers
+   #+begin_src python :shebang #!/home/anton/venv/bin/python 
+     def read_queue():
+         '''Read the queue stored in stack, or create new one if an error occurs.
+         Return the read in queue.'''
+         with open('stack', 'rb') as f:
+             try:
+                 deq = pickle.load(f)
+             except:
+                 deq = deque()
+                 #Add a delete all wav files here.
+         print('In read {}'.format(deq))
+         return deq
+
+     def write_queue(q):
+         '''Write the queue q into 'stack'.'''
+         with open('stack', 'wb') as f:
+             pickle.dump(q, f)
+
+     def listen(name):
+        #Not used currently
+        os.system("xsel | tr '\n' ' ' | espeak -p 100 -s 650 -v male7 -w {}.wav --stdin".format(name))
    #+end_src
 
-** Enqeueue files
+** Enqueue files
+   We create a sha3 256 object and put all the copied text into it.
+   We then digest the text to 16 letters and use that as the name for the wav file generated from the text.
+   We run two independant checks: if the text hash is already on the queue and if the wav file generated from the 
+   text is in the file system. If either of those is not true we rectify the situation.
+   *Enqueue* *Lit.py*
    #+name:enqueue
-   #+begin_src python :tangle lit.py :comments noweb 
+   #+begin_src python 
      def add_to_stack():
-         '''Adds name to the stack file at the bottom.'''
+         '''Enqueues items on the right end of the queue, write out to the queue persistance file,
+            create an text to speech file.
+         '''
          m = shake_256()
          name = (os.popen("xsel").read())
          m.update(str.encode(name))
          name = m.hexdigest(16)
-         check = os.path.isfile("{}.wav".format(name))
-         if not check:
-             with open('stack', 'a') as f:
-                 f.write('{}\n'.format(str(name)))
+         t2t_queue = read_queue()
+         on_filesystem = os.path.isfile("{}.wav".format(name))
+         on_queue = (name in t2t_queue)
+         if not on_queue:
+             t2t_queue.append(name)
+             write_queue(t2t_queue)
+             print(t2t_queue)
+         if not on_filesystem:
              os.system("xsel | tr '\n' ' ' | espeak -p 100 -s 650 -v male7 -w {}.wav --stdin".format(name))
+         #Delete all files not on the queue.
 
    #+end_src
 
 ** Dequeue files
-   Add an optional recursive call.   
-
+   We read in the first entered file on the queue, play it and delete it.
+   Do this recusively until to files remain on the queue.
+   There is a delete option that is used to remove the wav file if it has been played.
+   If a file is not found on disk, it is popped off the queue and the program moves to the next file to play.
+   *Dequeue* *Lit.py*
    #+name:dequeue
-   #+begin_src python :tangle lit.py :comments noweb 
-     def pop_from_stack(delete=True, cont=False):
-         '''Pops a file from the bottom of the stack'''
-         with open('stack', 'r') as f:
-             lines = [x.strip() for x in f]
-             try:
-                 lines.remove('')
-             except:
-                 pass
-             print(lines)
-             if not lines:
-                 print('No files quequed up')
-                 return 
-         with open('stack', 'w') as f:
-             f.write("\n".join(lines[1:]) + '\n')
-         name = lines[0]
+   #+begin_src python 
+     def pop_from_stack(delete=True):
+         '''Dequeue a file from the left end of the queue.'''
+         t2t_queue = read_queue()
+         try:
+             name = t2t_queue.popleft()
+         except IndexError: 
+             print('No files quequed up')
+             os.system('rm *wav')
+             return
+         write_queue(t2t_queue)
          check = os.path.isfile("{}.wav".format(name))
-         if check:
+         if not check: #see if you can use trys with os.system
+             print('No file on disk')
+         else:
              os.system('mplayer {}.wav'.format(name))
              if delete:
                  os.system('rm {}.wav'.format(name))
-             if cont:
-                 pop_from_stack(cont=True)
-         else:
-             print("File not found.")
+             pop_from_stack()
    #+end_src
 
-** Concat files files
-   Add an optional recursive call.   
+** Concat files
+   This should read all the files on the queue and put them as one large file.
+   Not actually tested.
+   *Concat* *Lit.py*
    #+name:concat
-   #+begin_src python :tangle lit.py :comments noweb 
+   #+begin_src python 
      def concat_files():
          '''Concat all the files in the queue'''
-         #Not tested.
-         with open('stack', 'r') as f:
-             lines = [x.strip() for x in f]
-             if not lines:
-                 print('No files quequed up')
-                 return 
-         with open('stack', 'w') as f:
-             f.write("")
-             #Assume nothing left
-         name = lines[0]
+         #Badly tested.
+         t2t_queue = read_queue()
          new_files = []
-         for i in lines:
-             check = os.path.isfile("{}.wav".format(name))
+         for i in t2t_queue:
+             check = os.path.isfile("{}.wav".format(i))
              if check:
-                 new_files.append(name)
+                 new_files.append(i)
          joined_command = ['{}.wav'.format(x) for x in new_files]
          joined_command = ' '.join(joined_command)
          os.system('sox {} big.wav'.format(joined_command))
          os.system('mplayer big.wav')
-
+         os.system('rm *wav')
    #+end_src
 
 ** Main dispatcher
+   Checks which flags have been set and executes the functions attached to them.
+   *Displatcher* *Lit.py*
    #+name:dispatcher
-   #+begin_src python :tangle lit.py :comments noweb 
+   #+begin_src python 
      if __name__ == "__main__":
          if args.add:
              add_to_stack()
          if args.play:
              pop_from_stack()
-         if args.loop:
-             pop_from_stack(cont=True)
          if args.join:
              concat_files()
    #+end_src
 
-
-* TODO Plant
+* TODO User guide [0/1]
+  + Listen to clipboard: q -ap
+  + Add clipboard to queue q -a
+  + Listen to queue q -p
+  + Create a merged file from all files on queue q -j
+  + [ ] Get -j to be an option with the named file q -j name.
+  
+* TODO Plan
+  
+** Add testing
+   Create another file testing.py that runs tests on the files.
+   Testing should have no impact on how you write the code.
   
 ** Spin off own threads for song creation. 
 
 ** Make file to extract the code from org file.
    
 ** Create a deamon that plays any enqueued songs.
-  
-** Add testing
-   Create another file testing.py that runs tests on the files.
 
 ** Redo code with better data structures.
    
 
-** TODO Extensoin
-   Expand this to have an endless loop that constantly plays back files if any are present.
+** TODO Extensoin [1/1]
+   + [X] Expand this to have an endless loop that constantly plays back files if any are present.
 
 * COMMENT Code
   All files named as hashes to avoid collisions.
   Command line options 
   + [ ] Add commandline options that are mutually exclisive.
   + [ ] Add threads to run the espeak commands on their own proccess.
-  + [ ] Use path library.
+  + [X] Use path library.
 ** 
