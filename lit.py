@@ -1,4 +1,5 @@
-#!/home/anton/venv/bin/python
+#!/usr/bin/python3
+# [[file:~/Code/Python/NewSounds/literate.org::*Code][Code:1]]
 # [[file:~/Code/Python/NewSounds/literate.org::header][header]]
 import os
 from hashlib import shake_256
@@ -17,34 +18,36 @@ parser.add_argument("-p", "--play", help="play a file",
                     action="store_true")
 parser.add_argument("-j", "--join", help="join all files",
                     action="store_true")
+parser.add_argument("-l", "--list_files", help="list all files on queue",
+                    action="store_true")
+parser.add_argument("-s", "--speed", nargs='?', default='750',help="speed of recitation")
+parser.add_argument("-i", "--pitch", nargs= '?', default='100', help="pitch of recitation")
 
 args = parser.parse_args()
-# header ends here
 
+# header ends here #import statements and cli interface
 # [[file:~/Code/Python/NewSounds/literate.org::queue-helpers][queue-helpers]]
 def read_queue():
+    '''Read the queue stored in stack, or create new one if an error occurs.
+    Return the read in queue.'''
     with open('stack', 'rb') as f:
         try:
             deq = pickle.load(f)
         except:
             deq = deque()
-    print('In read {}'.format(deq))
+            #Add a delete all wav files here.
     return deq
 
 def write_queue(q):
+    '''Write the queue q into 'stack'.'''
     with open('stack', 'wb') as f:
         pickle.dump(q, f)
-        #f.write(pickle.dumps(q))
 
-def listen(name):
-   #Not used currently
-   os.system("xsel | tr '\n' ' ' | espeak -p 100 -s 650 -v male7 -w {}.wav --stdin".format(name))
-# queue-helpers ends here
-
+# queue-helpers ends here #persist the queue on disk and read it
 # [[file:~/Code/Python/NewSounds/literate.org::enqueue][enqueue]]
 def add_to_stack():
-    '''Enqueues items on the right end of the queue, write out to the queue persistance file,
-       create an text to speech file.
+    '''Enqueues items, write out to the queue persistance file,
+       create a text to speech file with sha as name.
     '''
     m = shake_256()
     name = (os.popen("xsel").read())
@@ -58,10 +61,11 @@ def add_to_stack():
         write_queue(t2t_queue)
         print(t2t_queue)
     if not on_filesystem:
-        os.system("xsel | tr '\n' ' ' | espeak -p 100 -s 650 -v male7 -w {}.wav --stdin".format(name))
+        os.system("xsel | tr '\n' ' ' | espeak -p {pitch} -s {speed} -v male7 -w {name}.wav --stdin"
+        .format(name=name, speed=args.speed, pitch=args.pitch))
     #Delete all files not on the queue.
-# enqueue ends here
 
+# enqueue ends here #Put the clipboard on the queue as an audio file
 # [[file:~/Code/Python/NewSounds/literate.org::dequeue][dequeue]]
 def pop_from_stack(delete=True):
     '''Dequeue a file from the left end of the queue.'''
@@ -81,8 +85,7 @@ def pop_from_stack(delete=True):
         if delete:
             os.system('rm {}.wav'.format(name))
         pop_from_stack()
-# dequeue ends here
-
+# dequeue ends here #Remove an audio file and play it
 # [[file:~/Code/Python/NewSounds/literate.org::concat][concat]]
 def concat_files():
     '''Concat all the files in the queue'''
@@ -98,8 +101,14 @@ def concat_files():
     os.system('sox {} big.wav'.format(joined_command))
     os.system('mplayer big.wav')
     os.system('rm *wav')
-# concat ends here
-
+# concat ends here #Future options - not implemented
+# [[file:~/Code/Python/NewSounds/literate.org::list][list]]
+def list_files():
+    k = read_queue()
+    print("The size of the queue is {}".format(len(k)))
+    for i in k:
+        print(i)
+# list ends here #List the files currently in the queue
 # [[file:~/Code/Python/NewSounds/literate.org::dispatcher][dispatcher]]
 if __name__ == "__main__":
     if args.add:
@@ -108,4 +117,8 @@ if __name__ == "__main__":
         pop_from_stack()
     if args.join:
         concat_files()
-# dispatcher ends here
+    if args.list_files:
+        list_files()
+
+# dispatcher ends here #cli interface mapping options to functions
+# Code:1 ends here

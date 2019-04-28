@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2018-04-18 Wed 09:18 -->
+<!-- 2019-04-28 Sun 16:02 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>&lrm;</title>
@@ -161,6 +161,19 @@
   .footdef  { margin-bottom: 1em; }
   .figure { padding: 1em; }
   .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
   .inlinetask {
     padding: 10px;
     border: 2px solid gray;
@@ -185,7 +198,7 @@
 @licstart  The following is the entire license notice for the
 JavaScript code in this tag.
 
-Copyright (C) 2012-2018 Free Software Foundation, Inc.
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
 
 The JavaScript code in this tag is free software: you can
 redistribute it and/or modify it under the terms of the GNU
@@ -233,54 +246,75 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org40ac25e">1. About</a></li>
-<li><a href="#orga4ef61f">2. Implementation <code>[2/2]</code></a></li>
-<li><a href="#orgcadd291">3. Code</a>
+<li><a href="#org3735bbb">1. About</a>
 <ul>
-<li><a href="#org8bf9cf3">3.1. House keeping</a></li>
-<li><a href="#org7b73d9b">3.2. Queue persistence</a></li>
-<li><a href="#org67512d1">3.3. Enqueue files</a></li>
-<li><a href="#org647eead">3.4. Dequeue files</a></li>
-<li><a href="#org134c974">3.5. Concat files</a></li>
-<li><a href="#org5cea761">3.6. Main dispatcher</a></li>
+<li><a href="#orgf550ed7">1.1. Requirements</a></li>
 </ul>
 </li>
-<li><a href="#orgaafa5cf">4. <span class="todo TODO">TODO</span> User guide</a></li>
-<li><a href="#org84478e9">5. <span class="todo TODO">TODO</span> Plan</a>
+<li><a href="#orgb1163ac">2. Implementation</a></li>
+<li><a href="#org29c1b30">3. Code</a>
 <ul>
-<li><a href="#orgf94820d">5.1. Add testing</a></li>
-<li><a href="#org631d436">5.2. Spin off own threads for song creation.</a></li>
-<li><a href="#orge460605">5.3. Make file to extract the code from org file.</a></li>
-<li><a href="#orgab40e23">5.4. Create a deamon that plays any enqueued songs.</a></li>
-<li><a href="#org89920fd">5.5. Redo code with better data structures.</a></li>
-<li><a href="#orgf086d04">5.6. <span class="todo TODO">TODO</span> Extensoin</a></li>
+<li><a href="#orgfdb6e2a">3.1. House keeping</a></li>
+<li><a href="#org614cecb">3.2. Queue persistence</a></li>
+<li><a href="#org0ef8cd3">3.3. Enqueue files</a></li>
+<li><a href="#org17ffc3a">3.4. Dequeue files</a></li>
+<li><a href="#org783659f">3.5. Concat files</a></li>
+<li><a href="#org43eaa10">3.6. List files <code>[0/1]</code></a></li>
+<li><a href="#org0935a1a">3.7. Main dispatcher</a></li>
+</ul>
+</li>
+<li><a href="#org22cb504">4. User guide</a></li>
+<li><a href="#orgd295f19">5. Plan</a>
+<ul>
+<li><a href="#org372592f">5.1. <span class="todo TODO">TODO</span> Add testing</a></li>
+<li><a href="#org95e5382">5.2. <span class="todo TODO">TODO</span> Spin off own threads for audio file creation.</a></li>
+<li><a href="#org6b9039e">5.3. <span class="todo TODO">TODO</span> Make file to extract the code from org file.</a></li>
+<li><a href="#orgb3a81de">5.4. <span class="todo TODO">TODO</span> Create a deamon that plays any enqueued audio file.</a></li>
+<li><a href="#orgab3f498">5.5. <span class="todo TODO">TODO</span> Redo code with better data structures.</a></li>
+<li><a href="#org6575d3c">5.6. <span class="done DONE">DONE</span> Extensoin <code>[1/1]</code></a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org40ac25e" class="outline-2">
-<h2 id="org40ac25e"><span class="section-number-2">1</span> About</h2>
+<div id="outline-container-org3735bbb" class="outline-2">
+<h2 id="org3735bbb"><span class="section-number-2">1</span> About</h2>
 <div class="outline-text-2" id="text-1">
 <p>
-This application creates text2speech files from the clipboard and makes a fifo queue of the files
-and plays them in order.
+This application creates text to speech files from the system clipboard, makes
+a FIFO queue of the sound files and plays them in the order they were 
+enqueued.
+</p>
+
+<p>
+It uses xsel to get the systems clipboard and espeak to produce the text to 
+speech audio files.
 </p>
 </div>
+
+
+<div id="outline-container-orgf550ed7" class="outline-3">
+<h3 id="orgf550ed7"><span class="section-number-3">1.1</span> Requirements</h3>
+<div class="outline-text-3" id="text-1-1">
+<ul class="org-ul">
+<li>espeak</li>
+<li>xsel</li>
+<li>python3</li>
+<li>Linux</li>
+</ul>
+</div>
+</div>
 </div>
 
 
-<div id="outline-container-orga4ef61f" class="outline-2">
-<h2 id="orga4ef61f"><span class="section-number-2">2</span> Implementation <code>[2/2]</code></h2>
+<div id="outline-container-orgb1163ac" class="outline-2">
+<h2 id="orgb1163ac"><span class="section-number-2">2</span> Implementation</h2>
 <div class="outline-text-2" id="text-2">
-<ul class="org-ul">
-<li class="on"><code>[X]</code> Change stack to queue in layout.png.</li>
-<li class="on"><code>[X]</code> Remove play/loop, have a single command that plays everything and deletes it as you go.</li>
-</ul>
 <p>
-The program has a hard coded path <code>sound_files</code> in <code>home/user</code> where all text2speech files are stored,
-and where the queue is persisted between calls.
-All files are named using the sha3 hash of the text that will be turned to speech.
+The program has a hard coded path <code>sound_files</code> in <code>/home/user/</code> where all 
+text to speech files are stored, and where the queue is persisted between 
+calls. All files are named using the sha3 hash of the text that will be 
+turned to speech.
 </p>
 
 
@@ -301,244 +335,321 @@ The program has four command line flags:
 Create a text2speech file and add it to the queue
 </p></li>
 <li><p>
--p: Play top
+-p: Play 
 </p>
 
 <p>
-Start playing the top file of the queue and continue playing all subsequent files.
+Start playing the top file of the queue and continue playing all subsequent 
+files, files are deleted when played fully.
 </p></li>
+<li><p>
+-l: List files currently on the queue by name.
+</p>
+
+<p>
+These are currently only done by the hash of the text to be read.
+</p></li>
+
+<li><p>
+-s: Select the text to speech speed in word per minute.
+</p>
+
+<p>
+Select a the speed at which the audio file is encoded.
+</p></li>
+<li><p>
+-p: Select the text to speech pitch.
+</p>
+
+<p>
+Select the 'pitch' of the audio file. A fake one parameter value that 
+controls multiple parameters of the output sound.
+</p></li>
+
 <li><p>
 -j: Merge all into single file
 </p>
 
 <p>
-Take all the files on the queue and merge them into a single wav file.
+<b><b>Not currently implemented</b></b> Take all the files on the queue and merge them into a single wav file. 
 </p></li>
 </ul>
 </div>
 </div>
 
 
-<div id="outline-container-orgcadd291" class="outline-2">
-<h2 id="orgcadd291"><span class="section-number-2">3</span> Code</h2>
+<div id="outline-container-org29c1b30" class="outline-2">
+<h2 id="org29c1b30"><span class="section-number-2">3</span> Code</h2>
 <div class="outline-text-2" id="text-3">
+<p>
+The over all structure of the program, with sections tangled from the 
+following sections.
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;header&gt;&gt; <span style="color: #ffff00;">#</span><span style="color: #ffff00;">import statements and cli interface</span>
+&lt;&lt;queue-helpers&gt;&gt; <span style="color: #ffff00;">#</span><span style="color: #ffff00;">persist the queue on disk and read it</span>
+&lt;&lt;enqueue&gt;&gt; <span style="color: #ffff00;">#</span><span style="color: #ffff00;">Put the clipboard on the queue as an audio file</span>
+&lt;&lt;dequeue&gt;&gt; <span style="color: #ffff00;">#</span><span style="color: #ffff00;">Remove an audio file and play it</span>
+&lt;&lt;concat&gt;&gt; <span style="color: #ffff00;">#</span><span style="color: #ffff00;">Future options - not implemented</span>
+&lt;&lt;<span style="color: #0000ff; font-weight: bold;">list</span>&gt;&gt; <span style="color: #ffff00;">#</span><span style="color: #ffff00;">List the files currently in the queue</span>
+&lt;&lt;dispatcher&gt;&gt; <span style="color: #ffff00;">#</span><span style="color: #ffff00;">cli interface mapping options to functions</span>
+</pre>
 </div>
-<div id="outline-container-org8bf9cf3" class="outline-3">
-<h3 id="org8bf9cf3"><span class="section-number-3">3.1</span> House keeping</h3>
+</div>
+<div id="outline-container-orgfdb6e2a" class="outline-3">
+<h3 id="orgfdb6e2a"><span class="section-number-3">3.1</span> House keeping</h3>
 <div class="outline-text-3" id="text-3-1">
-<ul class="org-ul">
-<li class="on"><code>[X]</code> Break out section with queue functions to own subheading.</li>
-<li class="on"><code>[X]</code> Use pickle.dump pickle.load so you don't use with open.</li>
-</ul>
 <p>
 Setup shebang, script working directory, flags and queue persistence functions.
 The shebang used is the file location of the venv python.
 The flags are implemented from argparse.
-Queue from collections is picked and unpicked from the given file.
 </p>
 
 <p>
 <b>Name</b>:Header <b>Tangle to</b>:lit.py
 </p>
-<p>
-<b>header:</b>
-</p>
 <div class="org-src-container">
-<pre class="src src-python"><span style="color: #859900; font-weight: bold;">import</span> os
-<span style="color: #859900; font-weight: bold;">from</span> hashlib <span style="color: #859900; font-weight: bold;">import</span> shake_256
-<span style="color: #859900; font-weight: bold;">import</span> argparse
-<span style="color: #859900; font-weight: bold;">from</span> collections <span style="color: #859900; font-weight: bold;">import</span> deque
-<span style="color: #859900; font-weight: bold;">import</span> pickle
-<span style="color: #859900; font-weight: bold;">from</span> pathlib <span style="color: #859900; font-weight: bold;">import</span> Path
+<pre class="src src-python" id="orgffa758e"><span style="color: #00ffff; font-weight: bold;">import</span> os
+<span style="color: #00ffff; font-weight: bold;">from</span> hashlib <span style="color: #00ffff; font-weight: bold;">import</span> shake_256
+<span style="color: #00ffff; font-weight: bold;">import</span> argparse
+<span style="color: #00ffff; font-weight: bold;">from</span> collections <span style="color: #00ffff; font-weight: bold;">import</span> deque
+<span style="color: #00ffff; font-weight: bold;">import</span> pickle
+<span style="color: #00ffff; font-weight: bold;">from</span> pathlib <span style="color: #00ffff; font-weight: bold;">import</span> Path
 
-<span style="color: #268bd2;">home</span> = <span style="color: #839496; font-weight: bold;">str</span>(Path.home())
-os.chdir(<span style="color: #2aa198;">"{}/sound_files"</span>.<span style="color: #839496; font-weight: bold;">format</span>(home))
+<span style="color: #ffff00;">home</span> = <span style="color: #0000ff; font-weight: bold;">str</span>(Path.home())
+os.chdir(<span style="color: #00ff00;">"{}/sound_files"</span>.<span style="color: #0000ff; font-weight: bold;">format</span>(home))
 
-<span style="color: #268bd2;">parser</span> = argparse.ArgumentParser()
-parser.add_argument(<span style="color: #2aa198;">"-a"</span>, <span style="color: #2aa198;">"--add"</span>, <span style="color: #839496; font-weight: bold;">help</span>=<span style="color: #2aa198;">"add a file"</span>,
-                    action=<span style="color: #2aa198;">"store_true"</span>)
-parser.add_argument(<span style="color: #2aa198;">"-p"</span>, <span style="color: #2aa198;">"--play"</span>, <span style="color: #839496; font-weight: bold;">help</span>=<span style="color: #2aa198;">"play a file"</span>,
-                    action=<span style="color: #2aa198;">"store_true"</span>)
-parser.add_argument(<span style="color: #2aa198;">"-j"</span>, <span style="color: #2aa198;">"--join"</span>, <span style="color: #839496; font-weight: bold;">help</span>=<span style="color: #2aa198;">"join all files"</span>,
-                    action=<span style="color: #2aa198;">"store_true"</span>)
+<span style="color: #ffff00;">parser</span> = argparse.ArgumentParser()
+parser.add_argument(<span style="color: #00ff00;">"-a"</span>, <span style="color: #00ff00;">"--add"</span>, <span style="color: #0000ff; font-weight: bold;">help</span>=<span style="color: #00ff00;">"add a file"</span>,
+                    action=<span style="color: #00ff00;">"store_true"</span>)
+parser.add_argument(<span style="color: #00ff00;">"-p"</span>, <span style="color: #00ff00;">"--play"</span>, <span style="color: #0000ff; font-weight: bold;">help</span>=<span style="color: #00ff00;">"play a file"</span>,
+                    action=<span style="color: #00ff00;">"store_true"</span>)
+parser.add_argument(<span style="color: #00ff00;">"-j"</span>, <span style="color: #00ff00;">"--join"</span>, <span style="color: #0000ff; font-weight: bold;">help</span>=<span style="color: #00ff00;">"join all files"</span>,
+                    action=<span style="color: #00ff00;">"store_true"</span>)
+parser.add_argument(<span style="color: #00ff00;">"-l"</span>, <span style="color: #00ff00;">"--list_files"</span>, <span style="color: #0000ff; font-weight: bold;">help</span>=<span style="color: #00ff00;">"list all files on queue"</span>,
+                    action=<span style="color: #00ff00;">"store_true"</span>)
+parser.add_argument(<span style="color: #00ff00;">"-s"</span>, <span style="color: #00ff00;">"--speed"</span>, nargs=<span style="color: #00ff00;">'?'</span>, default=<span style="color: #00ff00;">'750'</span>,<span style="color: #0000ff; font-weight: bold;">help</span>=<span style="color: #00ff00;">"speed of recitation"</span>)
+parser.add_argument(<span style="color: #00ff00;">"-i"</span>, <span style="color: #00ff00;">"--pitch"</span>, nargs= <span style="color: #00ff00;">'?'</span>, default=<span style="color: #00ff00;">'100'</span>, <span style="color: #0000ff; font-weight: bold;">help</span>=<span style="color: #00ff00;">"pitch of recitation"</span>)
 
-<span style="color: #268bd2;">args</span> = parser.parse_args()
+<span style="color: #ffff00;">args</span> = parser.parse_args()
 
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-org7b73d9b" class="outline-3">
-<h3 id="org7b73d9b"><span class="section-number-3">3.2</span> Queue persistence</h3>
+
+<div id="outline-container-org614cecb" class="outline-3">
+<h3 id="org614cecb"><span class="section-number-3">3.2</span> Queue persistence</h3>
 <div class="outline-text-3" id="text-3-2">
-<ul class="org-ul">
-<li class="off"><code>[&#xa0;]</code> Add/mode descriptions from house kepeing.</li>
-</ul>
-
 <p>
-<b>queue-helpers:</b>
+Queue from collections is picked and unpicked from the given file.
+The queue class is used from the collections library,
+pickle is used to store a binary representation of the queue in the <code>stack</code> file.
+If pickle can't read the file, we assume there is no current stack and create a new one.
 </p>
+
 <div class="org-src-container">
-<pre class="src src-python"><span style="color: #859900; font-weight: bold;">def</span> <span style="color: #268bd2;">read_queue</span>():
-    <span style="color: #859900; font-weight: bold;">with</span> <span style="color: #839496; font-weight: bold;">open</span>(<span style="color: #2aa198;">'stack'</span>, <span style="color: #2aa198;">'rb'</span>) <span style="color: #859900; font-weight: bold;">as</span> f:
-        <span style="color: #859900; font-weight: bold;">try</span>:
-            <span style="color: #268bd2;">deq</span> = pickle.load(f)
-        <span style="color: #859900; font-weight: bold;">except</span>:
-            <span style="color: #268bd2;">deq</span> = deque()
-    <span style="color: #859900; font-weight: bold;">print</span>(<span style="color: #2aa198;">'In read {}'</span>.<span style="color: #839496; font-weight: bold;">format</span>(deq))
-    <span style="color: #859900; font-weight: bold;">return</span> deq
+<pre class="src src-python" id="org1987c12"><span style="color: #00ffff; font-weight: bold;">def</span> <span style="color: #0000ff; font-weight: bold;">read_queue</span>():
+    <span style="color: #00ff00;">'''Read the queue stored in stack, or create new one if an error occurs.</span>
+<span style="color: #00ff00;">    Return the read in queue.'''</span>
+    <span style="color: #00ffff; font-weight: bold;">with</span> <span style="color: #0000ff; font-weight: bold;">open</span>(<span style="color: #00ff00;">'stack'</span>, <span style="color: #00ff00;">'rb'</span>) <span style="color: #00ffff; font-weight: bold;">as</span> f:
+        <span style="color: #00ffff; font-weight: bold;">try</span>:
+            <span style="color: #ffff00;">deq</span> = pickle.load(f)
+        <span style="color: #00ffff; font-weight: bold;">except</span>:
+            <span style="color: #ffff00;">deq</span> = deque()
+            <span style="color: #ffff00;">#</span><span style="color: #ffff00;">Add a delete all wav files here.</span>
+    <span style="color: #00ffff; font-weight: bold;">return</span> deq
 
-<span style="color: #859900; font-weight: bold;">def</span> <span style="color: #268bd2;">write_queue</span>(q):
-    <span style="color: #859900; font-weight: bold;">with</span> <span style="color: #839496; font-weight: bold;">open</span>(<span style="color: #2aa198;">'stack'</span>, <span style="color: #2aa198;">'wb'</span>) <span style="color: #859900; font-weight: bold;">as</span> f:
+<span style="color: #00ffff; font-weight: bold;">def</span> <span style="color: #0000ff; font-weight: bold;">write_queue</span>(q):
+    <span style="color: #00ff00;">'''Write the queue q into 'stack'.'''</span>
+    <span style="color: #00ffff; font-weight: bold;">with</span> <span style="color: #0000ff; font-weight: bold;">open</span>(<span style="color: #00ff00;">'stack'</span>, <span style="color: #00ff00;">'wb'</span>) <span style="color: #00ffff; font-weight: bold;">as</span> f:
         pickle.dump(q, f)
-        <span style="color: #586e75;">#</span><span style="color: #586e75;">f.write(pickle.dumps(q))</span>
 
-<span style="color: #859900; font-weight: bold;">def</span> <span style="color: #268bd2;">listen</span>(name):
-   <span style="color: #586e75;">#</span><span style="color: #586e75;">Not used currently</span>
-   os.system(<span style="color: #2aa198;">"xsel | tr '\n' ' ' | espeak -p 100 -s 650 -v male7 -w {}.wav --stdin"</span>.<span style="color: #839496; font-weight: bold;">format</span>(name))
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org67512d1" class="outline-3">
-<h3 id="org67512d1"><span class="section-number-3">3.3</span> Enqueue files</h3>
+<div id="outline-container-org0ef8cd3" class="outline-3">
+<h3 id="org0ef8cd3"><span class="section-number-3">3.3</span> Enqueue files</h3>
 <div class="outline-text-3" id="text-3-3">
 <p>
 We create a sha3 256 object and put all the copied text into it.
-We then digest the text to 16 letters and use that as the name for the wav file generated from the text.
-We run two independant checks: if the text hash is already on the queue and if the wav file generated from the 
-text is in the file system. If either of those is not true we rectify the situation.
+We then digest the text to 16 letters and use that as the name for the wav 
+file generated from the text. We run two independent checks: if the text 
+hash is already on the queue and if the wav file generated from the 
+text is in the file system. If either of those is not true we rectify 
+the situation.
+</p>
+
+<p>
 <b>Enqueue</b> <b>Lit.py</b>
 </p>
-<p>
-<b>enqueue:</b>
-</p>
 <div class="org-src-container">
-<pre class="src src-python"><span style="color: #859900; font-weight: bold;">def</span> <span style="color: #268bd2;">add_to_stack</span>():
-    <span style="color: #2aa198;">'''Adds name to the stack file at the bottom.'''</span>
-    <span style="color: #268bd2;">m</span> = shake_256()
-    <span style="color: #268bd2;">name</span> = (os.popen(<span style="color: #2aa198;">"xsel"</span>).read())
-    m.update(<span style="color: #839496; font-weight: bold;">str</span>.encode(name))
-    <span style="color: #268bd2;">name</span> = m.hexdigest(16)
-    <span style="color: #268bd2;">t2t_queue</span> = read_queue()
-    <span style="color: #268bd2;">on_filesystem</span> = os.path.isfile(<span style="color: #2aa198;">"{}.wav"</span>.<span style="color: #839496; font-weight: bold;">format</span>(name))
-    <span style="color: #268bd2;">on_queue</span> = (name <span style="color: #859900; font-weight: bold;">in</span> t2t_queue)
-    <span style="color: #859900; font-weight: bold;">if</span> <span style="color: #859900; font-weight: bold;">not</span> on_queue:
+<pre class="src src-python" id="org3013f63"><span style="color: #00ffff; font-weight: bold;">def</span> <span style="color: #0000ff; font-weight: bold;">add_to_stack</span>():
+    <span style="color: #00ff00;">'''Enqueues items, write out to the queue persistance file,</span>
+<span style="color: #00ff00;">       create a text to speech file with sha as name.</span>
+<span style="color: #00ff00;">    '''</span>
+    <span style="color: #ffff00;">m</span> = shake_256()
+    <span style="color: #ffff00;">name</span> = (os.popen(<span style="color: #00ff00;">"xsel"</span>).read())
+    m.update(<span style="color: #0000ff; font-weight: bold;">str</span>.encode(name))
+    <span style="color: #ffff00;">name</span> = m.hexdigest(16)
+    <span style="color: #ffff00;">t2t_queue</span> = read_queue()
+    <span style="color: #ffff00;">on_filesystem</span> = os.path.isfile(<span style="color: #00ff00;">"{}.wav"</span>.<span style="color: #0000ff; font-weight: bold;">format</span>(name))
+    <span style="color: #ffff00;">on_queue</span> = (name <span style="color: #00ffff; font-weight: bold;">in</span> t2t_queue)
+    <span style="color: #00ffff; font-weight: bold;">if</span> <span style="color: #00ffff; font-weight: bold;">not</span> on_queue:
         t2t_queue.append(name)
         write_queue(t2t_queue)
-        <span style="color: #859900; font-weight: bold;">print</span>(t2t_queue)
-    <span style="color: #859900; font-weight: bold;">if</span> <span style="color: #859900; font-weight: bold;">not</span> on_filesystem:
-        os.system(<span style="color: #2aa198;">"xsel | tr '\n' ' ' | espeak -p 100 -s 650 -v male7 -w {}.wav --stdin"</span>.<span style="color: #839496; font-weight: bold;">format</span>(name))
-    <span style="color: #586e75;">#</span><span style="color: #586e75;">Delete all files not on the queue.</span>
+        <span style="color: #00ffff; font-weight: bold;">print</span>(t2t_queue)
+    <span style="color: #00ffff; font-weight: bold;">if</span> <span style="color: #00ffff; font-weight: bold;">not</span> on_filesystem:
+        os.system(<span style="color: #00ff00;">"xsel | tr '\n' ' ' | espeak -p {pitch} -s {speed} -v male7 -w {name}.wav --stdin"</span>
+        .<span style="color: #0000ff; font-weight: bold;">format</span>(name=name, speed=args.speed, pitch=args.pitch))
+    <span style="color: #ffff00;">#</span><span style="color: #ffff00;">Delete all files not on the queue.</span>
 
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org647eead" class="outline-3">
-<h3 id="org647eead"><span class="section-number-3">3.4</span> Dequeue files</h3>
+<div id="outline-container-org17ffc3a" class="outline-3">
+<h3 id="org17ffc3a"><span class="section-number-3">3.4</span> Dequeue files</h3>
 <div class="outline-text-3" id="text-3-4">
 <p>
 We read in the first entered file on the queue, play it and delete it.
-The option cont is used to by the function to recursively call itself when the loop flag is on.
+Do this recusively until to files remain on the queue.
 There is a delete option that is used to remove the wav file if it has been played.
-If a file is not found on disk, it is popped off the queue and the program moves to the next file to play.
+If a file is not found on disk, it is popped off 
+the queue and the program moves to the next file to play.
+</p>
+
+<p>
 <b>Dequeue</b> <b>Lit.py</b>
 </p>
-<p>
-<b>dequeue:</b>
-</p>
 <div class="org-src-container">
-<pre class="src src-python"><span style="color: #859900; font-weight: bold;">def</span> <span style="color: #268bd2;">pop_from_stack</span>(delete=<span style="color: #268bd2; font-weight: bold;">True</span>):
-    <span style="color: #2aa198;">'''Pops a file from the bottom of the stack'''</span>
-    <span style="color: #268bd2;">t2t_queue</span> = read_queue()
-    <span style="color: #859900; font-weight: bold;">try</span>:
-        <span style="color: #268bd2;">name</span> = t2t_queue.popleft()
-    <span style="color: #859900; font-weight: bold;">except</span> <span style="color: #b58900;">IndexError</span>: 
-        <span style="color: #859900; font-weight: bold;">print</span>(<span style="color: #2aa198;">'No files quequed up'</span>)
-        os.system(<span style="color: #2aa198;">'rm *wav'</span>)
-        <span style="color: #859900; font-weight: bold;">return</span>
+<pre class="src src-python" id="orge7ef4b1"><span style="color: #00ffff; font-weight: bold;">def</span> <span style="color: #0000ff; font-weight: bold;">pop_from_stack</span>(delete=<span style="color: #ff00ff;">True</span>):
+    <span style="color: #00ff00;">'''Dequeue a file from the left end of the queue.'''</span>
+    <span style="color: #ffff00;">t2t_queue</span> = read_queue()
+    <span style="color: #00ffff; font-weight: bold;">try</span>:
+        <span style="color: #ffff00;">name</span> = t2t_queue.popleft()
+    <span style="color: #00ffff; font-weight: bold;">except</span> <span style="color: #00ff00;">IndexError</span>: 
+        <span style="color: #00ffff; font-weight: bold;">print</span>(<span style="color: #00ff00;">'No files quequed up'</span>)
+        os.system(<span style="color: #00ff00;">'rm *wav'</span>)
+        <span style="color: #00ffff; font-weight: bold;">return</span>
     write_queue(t2t_queue)
-    <span style="color: #268bd2;">check</span> = os.path.isfile(<span style="color: #2aa198;">"{}.wav"</span>.<span style="color: #839496; font-weight: bold;">format</span>(name))
-    <span style="color: #859900; font-weight: bold;">if</span> <span style="color: #859900; font-weight: bold;">not</span> check: <span style="color: #586e75;">#</span><span style="color: #586e75;">see if you can use trys with os.system</span>
-        <span style="color: #859900; font-weight: bold;">print</span>(<span style="color: #2aa198;">'No file on disk'</span>)
-    <span style="color: #859900; font-weight: bold;">else</span>:
-        os.system(<span style="color: #2aa198;">'mplayer {}.wav'</span>.<span style="color: #839496; font-weight: bold;">format</span>(name))
-        <span style="color: #859900; font-weight: bold;">if</span> delete:
-            os.system(<span style="color: #2aa198;">'rm {}.wav'</span>.<span style="color: #839496; font-weight: bold;">format</span>(name))
+    <span style="color: #ffff00;">check</span> = os.path.isfile(<span style="color: #00ff00;">"{}.wav"</span>.<span style="color: #0000ff; font-weight: bold;">format</span>(name))
+    <span style="color: #00ffff; font-weight: bold;">if</span> <span style="color: #00ffff; font-weight: bold;">not</span> check: <span style="color: #ffff00;">#</span><span style="color: #ffff00;">see if you can use trys with os.system</span>
+        <span style="color: #00ffff; font-weight: bold;">print</span>(<span style="color: #00ff00;">'No file on disk'</span>)
+    <span style="color: #00ffff; font-weight: bold;">else</span>:
+        os.system(<span style="color: #00ff00;">'mplayer {}.wav'</span>.<span style="color: #0000ff; font-weight: bold;">format</span>(name))
+        <span style="color: #00ffff; font-weight: bold;">if</span> delete:
+            os.system(<span style="color: #00ff00;">'rm {}.wav'</span>.<span style="color: #0000ff; font-weight: bold;">format</span>(name))
         pop_from_stack()
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org134c974" class="outline-3">
-<h3 id="org134c974"><span class="section-number-3">3.5</span> Concat files</h3>
+<div id="outline-container-org783659f" class="outline-3">
+<h3 id="org783659f"><span class="section-number-3">3.5</span> Concat files</h3>
 <div class="outline-text-3" id="text-3-5">
 <p>
 This should read all the files on the queue and put them as one large file.
-Not actually tested.
+Not currently used.
+</p>
+
+<p>
 <b>Concat</b> <b>Lit.py</b>
 </p>
-<p>
-<b>concat:</b>
-</p>
 <div class="org-src-container">
-<pre class="src src-python"><span style="color: #859900; font-weight: bold;">def</span> <span style="color: #268bd2;">concat_files</span>():
-    <span style="color: #2aa198;">'''Concat all the files in the queue'''</span>
-    <span style="color: #586e75;">#</span><span style="color: #586e75;">Badly tested.</span>
-    <span style="color: #268bd2;">t2t_queue</span> = read_queue()
-    <span style="color: #268bd2;">new_files</span> = []
-    <span style="color: #859900; font-weight: bold;">for</span> i <span style="color: #859900; font-weight: bold;">in</span> t2t_queue:
-        <span style="color: #268bd2;">check</span> = os.path.isfile(<span style="color: #2aa198;">"{}.wav"</span>.<span style="color: #839496; font-weight: bold;">format</span>(i))
-        <span style="color: #859900; font-weight: bold;">if</span> check:
+<pre class="src src-python" id="org9cd53ee"><span style="color: #00ffff; font-weight: bold;">def</span> <span style="color: #0000ff; font-weight: bold;">concat_files</span>():
+    <span style="color: #00ff00;">'''Concat all the files in the queue'''</span>
+    <span style="color: #ffff00;">#</span><span style="color: #ffff00;">Badly tested.</span>
+    <span style="color: #ffff00;">t2t_queue</span> = read_queue()
+    <span style="color: #ffff00;">new_files</span> = []
+    <span style="color: #00ffff; font-weight: bold;">for</span> i <span style="color: #00ffff; font-weight: bold;">in</span> t2t_queue:
+        <span style="color: #ffff00;">check</span> = os.path.isfile(<span style="color: #00ff00;">"{}.wav"</span>.<span style="color: #0000ff; font-weight: bold;">format</span>(i))
+        <span style="color: #00ffff; font-weight: bold;">if</span> check:
             new_files.append(i)
-    <span style="color: #268bd2;">joined_command</span> = [<span style="color: #2aa198;">'{}.wav'</span>.<span style="color: #839496; font-weight: bold;">format</span>(x) <span style="color: #859900; font-weight: bold;">for</span> x <span style="color: #859900; font-weight: bold;">in</span> new_files]
-    <span style="color: #268bd2;">joined_command</span> = <span style="color: #2aa198;">' '</span>.join(joined_command)
-    os.system(<span style="color: #2aa198;">'sox {} big.wav'</span>.<span style="color: #839496; font-weight: bold;">format</span>(joined_command))
-    os.system(<span style="color: #2aa198;">'mplayer big.wav'</span>)
-    os.system(<span style="color: #2aa198;">'rm *wav'</span>)
+    <span style="color: #ffff00;">joined_command</span> = [<span style="color: #00ff00;">'{}.wav'</span>.<span style="color: #0000ff; font-weight: bold;">format</span>(x) <span style="color: #00ffff; font-weight: bold;">for</span> x <span style="color: #00ffff; font-weight: bold;">in</span> new_files]
+    <span style="color: #ffff00;">joined_command</span> = <span style="color: #00ff00;">' '</span>.join(joined_command)
+    os.system(<span style="color: #00ff00;">'sox {} big.wav'</span>.<span style="color: #0000ff; font-weight: bold;">format</span>(joined_command))
+    os.system(<span style="color: #00ff00;">'mplayer big.wav'</span>)
+    os.system(<span style="color: #00ff00;">'rm *wav'</span>)
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org5cea761" class="outline-3">
-<h3 id="org5cea761"><span class="section-number-3">3.6</span> Main dispatcher</h3>
+<div id="outline-container-org43eaa10" class="outline-3">
+<h3 id="org43eaa10"><span class="section-number-3">3.6</span> List files <code>[0/1]</code></h3>
 <div class="outline-text-3" id="text-3-6">
+<ul class="org-ul">
+<li class="off"><code>[&#xa0;]</code> Expand to list running time of files on queue.</li>
+</ul>
+<p>
+A simple function that just lists all the files on the queue.
+</p>
+
+<p>
+<b>List</b> <b>Lit.py</b>
+</p>
+<div class="org-src-container">
+<pre class="src src-python" id="org1e4cce1"><span style="color: #00ffff; font-weight: bold;">def</span> <span style="color: #0000ff; font-weight: bold;">list_files</span>():
+    <span style="color: #ffff00;">k</span> = read_queue()
+    <span style="color: #00ffff; font-weight: bold;">print</span>(<span style="color: #00ff00;">"The size of the queue is {}"</span>.<span style="color: #0000ff; font-weight: bold;">format</span>(<span style="color: #0000ff; font-weight: bold;">len</span>(k)))
+    <span style="color: #00ffff; font-weight: bold;">for</span> i <span style="color: #00ffff; font-weight: bold;">in</span> k:
+        <span style="color: #00ffff; font-weight: bold;">print</span>(i)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0935a1a" class="outline-3">
+<h3 id="org0935a1a"><span class="section-number-3">3.7</span> Main dispatcher</h3>
+<div class="outline-text-3" id="text-3-7">
 <p>
 Checks which flags have been set and executes the functions attached to them.
+</p>
+
+<p>
 <b>Displatcher</b> <b>Lit.py</b>
 </p>
-<p>
-<b>dispatcher:</b>
-</p>
 <div class="org-src-container">
-<pre class="src src-python"><span style="color: #859900; font-weight: bold;">if</span> <span style="color: #839496; font-weight: bold;">__name__</span> == <span style="color: #2aa198;">"__main__"</span>:
-    <span style="color: #859900; font-weight: bold;">if</span> args.add:
+<pre class="src src-python" id="orge262417"><span style="color: #00ffff; font-weight: bold;">if</span> <span style="color: #0000ff; font-weight: bold;">__name__</span> == <span style="color: #00ff00;">"__main__"</span>:
+    <span style="color: #00ffff; font-weight: bold;">if</span> args.add:
         add_to_stack()
-    <span style="color: #859900; font-weight: bold;">if</span> args.play:
+    <span style="color: #00ffff; font-weight: bold;">if</span> args.play:
         pop_from_stack()
-    <span style="color: #859900; font-weight: bold;">if</span> args.join:
+    <span style="color: #00ffff; font-weight: bold;">if</span> args.join:
         concat_files()
+    <span style="color: #00ffff; font-weight: bold;">if</span> args.list_files:
+        list_files()
+
 </pre>
 </div>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orgaafa5cf" class="outline-2">
-<h2 id="orgaafa5cf"><span class="section-number-2">4</span> <span class="todo TODO">TODO</span> User guide</h2>
+<div id="outline-container-org22cb504" class="outline-2">
+<h2 id="org22cb504"><span class="section-number-2">4</span> User guide</h2>
+<div class="outline-text-2" id="text-4">
+<ul class="org-ul">
+<li>Listen to clipboard: q -ap</li>
+<li>Add clipboard to queue q -a</li>
+<li>Listen to queue q -p</li>
+<li>Read back clipboard at X word per minute: q -a -s X</li>
+<li>Read back clipboard with pitch X: q -a -p X</li>
+</ul>
+</div>
 </div>
 
-<div id="outline-container-org84478e9" class="outline-2">
-<h2 id="org84478e9"><span class="section-number-2">5</span> <span class="todo TODO">TODO</span> Plan</h2>
+<div id="outline-container-orgd295f19" class="outline-2">
+<h2 id="orgd295f19"><span class="section-number-2">5</span> Plan</h2>
 <div class="outline-text-2" id="text-5">
 </div>
-<div id="outline-container-orgf94820d" class="outline-3">
-<h3 id="orgf94820d"><span class="section-number-3">5.1</span> Add testing</h3>
+<div id="outline-container-org372592f" class="outline-3">
+<h3 id="org372592f"><span class="section-number-3">5.1</span> <span class="todo TODO">TODO</span> Add testing</h3>
 <div class="outline-text-3" id="text-5-1">
 <p>
 Create another file testing.py that runs tests on the files.
@@ -547,36 +658,35 @@ Testing should have no impact on how you write the code.
 </div>
 </div>
 
-<div id="outline-container-org631d436" class="outline-3">
-<h3 id="org631d436"><span class="section-number-3">5.2</span> Spin off own threads for song creation.</h3>
+<div id="outline-container-org95e5382" class="outline-3">
+<h3 id="org95e5382"><span class="section-number-3">5.2</span> <span class="todo TODO">TODO</span> Spin off own threads for audio file creation.</h3>
+</div>
+<div id="outline-container-org6b9039e" class="outline-3">
+<h3 id="org6b9039e"><span class="section-number-3">5.3</span> <span class="todo TODO">TODO</span> Make file to extract the code from org file.</h3>
 </div>
 
-<div id="outline-container-orge460605" class="outline-3">
-<h3 id="orge460605"><span class="section-number-3">5.3</span> Make file to extract the code from org file.</h3>
+<div id="outline-container-orgb3a81de" class="outline-3">
+<h3 id="orgb3a81de"><span class="section-number-3">5.4</span> <span class="todo TODO">TODO</span> Create a deamon that plays any enqueued audio file.</h3>
 </div>
 
-<div id="outline-container-orgab40e23" class="outline-3">
-<h3 id="orgab40e23"><span class="section-number-3">5.4</span> Create a deamon that plays any enqueued songs.</h3>
-</div>
-
-<div id="outline-container-org89920fd" class="outline-3">
-<h3 id="org89920fd"><span class="section-number-3">5.5</span> Redo code with better data structures.</h3>
+<div id="outline-container-orgab3f498" class="outline-3">
+<h3 id="orgab3f498"><span class="section-number-3">5.5</span> <span class="todo TODO">TODO</span> Redo code with better data structures.</h3>
 </div>
 
 
-<div id="outline-container-orgf086d04" class="outline-3">
-<h3 id="orgf086d04"><span class="section-number-3">5.6</span> <span class="todo TODO">TODO</span> Extensoin</h3>
+<div id="outline-container-org6575d3c" class="outline-3">
+<h3 id="org6575d3c"><span class="section-number-3">5.6</span> <span class="done DONE">DONE</span> Extensoin <code>[1/1]</code></h3>
 <div class="outline-text-3" id="text-5-6">
-<p>
-Expand this to have an endless loop that constantly plays back files if any are present.
-</p>
+<ul class="org-ul">
+<li class="on"><code>[X]</code> Expand this to have an endless loop that constantly plays back files if any are present.</li>
+</ul>
 </div>
 </div>
 </div>
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: anton</p>
-<p class="date">Created: 2018-04-18 Wed 09:18</p>
+<p class="date">Created: 2019-04-28 Sun 16:02</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

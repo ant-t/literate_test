@@ -1,12 +1,24 @@
 * About
-  This application creates text to speech files from the system clipboard, makes a fifo queue of the sound files
-  and plays them in the order they were enqueued.
+  This application creates text to speech files from the system clipboard, makes
+  a FIFO queue of the sound files and plays them in the order they were 
+  enqueued.
+  
+  It uses xsel to get the systems clipboard and espeak to produce the text to 
+  speech audio files.
+  
+  
+** Requirements
+   + espeak
+   + xsel
+   + python3
+   + Linux
 
 
 * Implementation 
-  The program has a hard coded path =sound_files= in =/home/user/= where all text to speech files are stored,
-  and where the queue is persisted between calls.
-  All files are named using the sha3 hash of the text that will be turned to speech.
+  The program has a hard coded path =sound_files= in =/home/user/= where all 
+  text to speech files are stored, and where the queue is persisted between 
+  calls. All files are named using the sha3 hash of the text that will be 
+  turned to speech.
 
   [[./layout.png]]
   
@@ -16,29 +28,40 @@
     Create a text2speech file and add it to the queue
   + -p: Play 
     
-    Start playing the top file of the queue and continue playing all subsequent files, files are deleted when played fully.
-  + -j: Merge all into single file
-    
-    Take all the files on the queue and merge them into a single wav file.
+    Start playing the top file of the queue and continue playing all subsequent 
+    files, files are deleted when played fully.
   + -l: List files currently on the queue by name.
 
     These are currently only done by the hash of the text to be read.
+    
+  + -s: Select the text to speech speed in word per minute.
+ 
+    Select a the speed at which the audio file is encoded.
+  + -p: Select the text to speech pitch.
+
+    Select the 'pitch' of the audio file. A fake one parameter value that 
+    controls multiple parameters of the output sound.
+    
+  + -j: Merge all into single file
+    
+    **Not currently implemented** Take all the files on the queue and merge them into a single wav file. 
   
 
 * Code
-#+PROPERTY: header-args:python :comments noweb :tangle no
-# Add an option to export everything in this section to lit.py.
-# Change source code so name of code block does not showup automatically
-The queue file has item added on the right, and items removed from the left.
-#+BEGIN_SRC python :shebang #!/home/anton/venv/bin/python :tangle lit.py :noweb no-export
-  <<header>>
-  <<queue-helpers>>
-  <<enqueue>>
-  <<dequeue>>
-  <<concat>>
-  <<list>>
-  <<dispatcher>>
-#+END_SRC
+  #+PROPERTY: header-args:python :comments noweb :tangle no
+  # Add an option to export everything in this section to lit.py.
+  # Change source code so name of code block does not show up automatically
+  The over all structure of the program, with sections tangled from the 
+  following sections.
+  #+BEGIN_SRC python :shebang #!/usr/bin/python3 :tangle lit.py :noweb no-export
+    <<header>> #import statements and cli interface
+    <<queue-helpers>> #persist the queue on disk and read it
+    <<enqueue>> #Put the clipboard on the queue as an audio file
+    <<dequeue>> #Remove an audio file and play it
+    <<concat>> #Future options - not implemented
+    <<list>> #List the files currently in the queue
+    <<dispatcher>> #cli interface mapping options to functions
+  #+END_SRC
 ** House keeping
    Setup shebang, script working directory, flags and queue persistence functions.
    The shebang used is the file location of the venv python.
@@ -66,15 +89,17 @@ The queue file has item added on the right, and items removed from the left.
                          action="store_true")
      parser.add_argument("-l", "--list_files", help="list all files on queue",
                          action="store_true")
+     parser.add_argument("-s", "--speed", nargs='?', default='750',help="speed of recitation")
+     parser.add_argument("-i", "--pitch", nargs= '?', default='100', help="pitch of recitation")
+
      args = parser.parse_args()
 
    #+end_src
    
 ** Queue persistence 
-   + [X] Add/mode descriptions from house kepeing.
      
    Queue from collections is picked and unpicked from the given file.
-   The queue function is used from the collections library,
+   The queue class is used from the collections library,
    pickle is used to store a binary representation of the queue in the =stack= file.
    If pickle can't read the file, we assume there is no current stack and create a new one.
    
@@ -96,23 +121,22 @@ The queue file has item added on the right, and items removed from the left.
          with open('stack', 'wb') as f:
              pickle.dump(q, f)
 
-     def listen(name):
-        #Not used currently
-        os.system("xsel | tr '\n' ' ' | espeak -p 100 -s 650 -v male7 -w {}.wav --stdin".format(name))
    #+end_src
 
 ** Enqueue files
    We create a sha3 256 object and put all the copied text into it.
-   We then digest the text to 16 letters and use that as the name for the wav file generated from the text.
-   We run two independant checks: if the text hash is already on the queue and if the wav file generated from the 
-   text is in the file system. If either of those is not true we rectify the situation.
+   We then digest the text to 16 letters and use that as the name for the wav 
+   file generated from the text. We run two independent checks: if the text 
+   hash is already on the queue and if the wav file generated from the 
+   text is in the file system. If either of those is not true we rectify 
+   the situation.
    
    *Enqueue* *Lit.py*
    #+name:enqueue
    #+begin_src python 
      def add_to_stack():
-         '''Enqueues items on the right end of the queue, write out to the queue persistance file,
-            create an text to speech file.
+         '''Enqueues items, write out to the queue persistance file,
+            create a text to speech file with sha as name.
          '''
          m = shake_256()
          name = (os.popen("xsel").read())
@@ -126,7 +150,8 @@ The queue file has item added on the right, and items removed from the left.
              write_queue(t2t_queue)
              print(t2t_queue)
          if not on_filesystem:
-             os.system("xsel | tr '\n' ' ' | espeak -p 100 -s 650 -v male7 -w {}.wav --stdin".format(name))
+             os.system("xsel | tr '\n' ' ' | espeak -p {pitch} -s {speed} -v male7 -w {name}.wav --stdin"
+             .format(name=name, speed=args.speed, pitch=args.pitch))
          #Delete all files not on the queue.
 
    #+end_src
@@ -135,7 +160,8 @@ The queue file has item added on the right, and items removed from the left.
    We read in the first entered file on the queue, play it and delete it.
    Do this recusively until to files remain on the queue.
    There is a delete option that is used to remove the wav file if it has been played.
-   If a file is not found on disk, it is popped off the queue and the program moves to the next file to play.
+   If a file is not found on disk, it is popped off 
+   the queue and the program moves to the next file to play.
    
    *Dequeue* *Lit.py*
    #+name:dequeue
@@ -162,7 +188,7 @@ The queue file has item added on the right, and items removed from the left.
 
 ** Concat files
    This should read all the files on the queue and put them as one large file.
-   Not actually tested.
+   Not currently used.
    
    *Concat* *Lit.py*
    #+name:concat
@@ -185,7 +211,7 @@ The queue file has item added on the right, and items removed from the left.
 
 ** List files [0/1]
    + [ ] Expand to list running time of files on queue.
-   A simple fuction that just lists all the files on the queue.
+   A simple function that just lists all the files on the queue.
    
    *List* *Lit.py*
    #+name:list
@@ -215,29 +241,28 @@ The queue file has item added on the right, and items removed from the left.
 
    #+end_src
 
-* TODO User guide [0/1]
+* User guide 
   + Listen to clipboard: q -ap
   + Add clipboard to queue q -a
   + Listen to queue q -p
-  + Create a merged file from all files on queue q -j
-  + [ ] Get -j to be an option with the named file q -j name.
+  + Read back clipboard at X word per minute: q -a -s X
+  + Read back clipboard with pitch X: q -a -p X
   
-* TODO Plan
+* Plan
   
-** Add testing
+** TODO Add testing
    Create another file testing.py that runs tests on the files.
    Testing should have no impact on how you write the code.
   
-** Spin off own threads for song creation. 
-
-** Make file to extract the code from org file.
+** TODO Spin off own threads for audio file creation. 
+** TODO Make file to extract the code from org file.
    
-** Create a deamon that plays any enqueued songs.
+** TODO Create a deamon that plays any enqueued audio file.
 
-** Redo code with better data structures.
+** TODO Redo code with better data structures.
    
 
-** TODO Extensoin [1/1]
+** DONE Extensoin [1/1]
    + [X] Expand this to have an endless loop that constantly plays back files if any are present.
 
 * COMMENT Code
@@ -246,4 +271,3 @@ The queue file has item added on the right, and items removed from the left.
   + [ ] Add commandline options that are mutually exclisive.
   + [ ] Add threads to run the espeak commands on their own proccess.
   + [X] Use path library.
-** 
